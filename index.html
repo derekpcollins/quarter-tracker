@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarter Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --text: #e8eaf0;
+      --text-muted: #7c82a0;
+      --text-dim: #4a5068;
+      --radius: 16px;
+      --radius-sm: 10px;
+
+      /* Q1 – blue */
+      --q1-color: #3b82f6;
+      --q1-glow: rgba(59,130,246,0.25);
+      --q1-gradient: linear-gradient(135deg, #1d4ed8, #3b82f6);
+
+      /* Q2 – green */
+      --q2-color: #22c55e;
+      --q2-glow: rgba(34,197,94,0.25);
+      --q2-gradient: linear-gradient(135deg, #15803d, #22c55e);
+
+      /* Q3 – orange */
+      --q3-color: #f97316;
+      --q3-glow: rgba(249,115,22,0.25);
+      --q3-gradient: linear-gradient(135deg, #c2410c, #f97316);
+
+      /* Q4 – purple */
+      --q4-color: #a855f7;
+      --q4-glow: rgba(168,85,247,0.25);
+      --q4-gradient: linear-gradient(135deg, #7e22ce, #a855f7);
+
+      --accent: var(--q1-color);
+      --accent-glow: var(--q1-glow);
+      --accent-gradient: var(--q1-gradient);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .app-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    .quarter-hero {
+      font-size: clamp(80px, 22vw, 140px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 40px var(--accent-glow));
+      transition: background 0.6s ease;
+    }
+
+    .year-label {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .date-range {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Progress Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .progress-pct {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .progress-track {
+      height: 10px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent-gradient);
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.6s ease;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-value {
+      font-size: clamp(18px, 4vw, 22px);
+      font-weight: 800;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    .stat-divider {
+      width: 1px;
+      background: var(--surface2);
+      align-self: stretch;
+    }
+
+    /* ── Timeline bar ── */
+    .timeline-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .year-track {
+      position: relative;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .year-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      border-radius: 99px;
+      background: var(--accent-gradient);
+      opacity: 0.45;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .year-quarters {
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      display: flex;
+    }
+
+    .year-q {
+      flex: 1;
+      border-right: 2px solid var(--bg);
+    }
+    .year-q:last-child { border-right: none; }
+
+    .year-q.active-q {
+      background: var(--accent-gradient);
+      transition: background 0.6s ease;
+    }
+
+    .year-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 9px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 5px;
+      vertical-align: middle;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 380px) {
+      .stats-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+      .stat-card { padding: 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="app-label">Quarter Tracker</div>
+      <div class="quarter-hero" id="qLabel">Q1</div>
+      <div class="year-label" id="yearLabel">2026</div>
+      <div class="date-range" id="dateRange">Jan 1 – Mar 31</div>
+    </div>
+
+    <div class="card">
+      <div class="progress-header">
+        <span class="progress-label">Quarter Progress</span>
+        <span class="progress-pct" id="pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Days</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-value" id="daysElapsed">0</div>
+            <div class="stat-sub">in</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-value" id="daysRemaining">0</div>
+            <div class="stat-sub">left</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Weeks</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-value" id="weeksElapsed">0</div>
+            <div class="stat-sub">in</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-value" id="weeksRemaining">0</div>
+            <div class="stat-sub">left</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Months</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-value" id="monthsElapsed">0</div>
+            <div class="stat-sub">in</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-value" id="monthsRemaining">0</div>
+            <div class="stat-sub">left</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-card">
+      <div class="timeline-header">
+        <span>Year Progress</span>
+        <span id="yearPct"></span>
+      </div>
+      <div class="year-track">
+        <div class="year-fill" id="yearFill"></div>
+        <div class="year-quarters">
+          <div class="year-q" id="yq1"></div>
+          <div class="year-q" id="yq2"></div>
+          <div class="year-q" id="yq3"></div>
+          <div class="year-q" id="yq4"></div>
+        </div>
+      </div>
+      <div class="year-labels">
+        <span>Jan</span><span>Apr</span><span>Jul</span><span>Oct</span><span>Dec</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span class="dot" id="liveDot"></span>
+      <span id="todayLabel">Today</span>
+    </div>
+  </div>
+
+  <script>
+    const QUARTERS = [
+      { q: 1, start: [0, 1],  end: [2, 31],  label: 'Jan 1 – Mar 31',  color: '--q1-color', glow: '--q1-glow', gradient: '--q1-gradient' },
+      { q: 2, start: [3, 1],  end: [5, 30],  label: 'Apr 1 – Jun 30',  color: '--q2-color', glow: '--q2-glow', gradient: '--q2-gradient' },
+      { q: 3, start: [6, 1],  end: [8, 30],  label: 'Jul 1 – Sep 30',  color: '--q3-color', glow: '--q3-glow', gradient: '--q3-gradient' },
+      { q: 4, start: [9, 1],  end: [11, 31], label: 'Oct 1 – Dec 31',  color: '--q4-color', glow: '--q4-glow', gradient: '--q4-gradient' },
+    ];
+
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function getQuarterInfo(now) {
+      const year = now.getFullYear();
+      const month = now.getMonth(); // 0-indexed
+
+      let qi = Math.floor(month / 3);
+      const qDef = QUARTERS[qi];
+
+      const qStart = new Date(year, qDef.start[0], qDef.start[1], 0, 0, 0, 0);
+      const qEnd   = new Date(year, qDef.end[0],   qDef.end[1],   23, 59, 59, 999);
+      const qTotal = (qEnd - qStart) / 86400000 + 1; // total days (inclusive)
+
+      const today = new Date(year, now.getMonth(), now.getDate());
+      const startDay = new Date(year, qDef.start[0], qDef.start[1]);
+      const daysElapsed   = Math.floor((today - startDay) / 86400000);
+      const totalDays     = Math.round(qTotal);
+      const daysRemaining = totalDays - daysElapsed - 1; // today counts as elapsed
+      const pct = Math.min(100, Math.max(0, ((daysElapsed + 1) / totalDays) * 100));
+
+      const weeksElapsed   = Math.floor(daysElapsed / 7);
+      const weeksRemaining = Math.floor(daysRemaining / 7);
+
+      // Months: days elapsed / avg days per month in this quarter
+      const avgDaysPerMonth = totalDays / 3;
+      const monthsElapsed   = ((daysElapsed + 1) / avgDaysPerMonth);
+      const monthsRemaining = (daysRemaining / avgDaysPerMonth);
+
+      // Year progress
+      const yearStart = new Date(year, 0, 1);
+      const yearEnd   = new Date(year, 11, 31, 23, 59, 59, 999);
+      const yearTotal = (yearEnd - yearStart) / 86400000;
+      const yearElapsed = (today - yearStart) / 86400000;
+      const yearPct = Math.min(100, (yearElapsed / yearTotal) * 100);
+
+      return {
+        q: qDef.q,
+        year,
+        label: qDef.label,
+        pct,
+        daysElapsed,
+        daysRemaining: Math.max(0, daysRemaining),
+        weeksElapsed,
+        weeksRemaining: Math.max(0, weeksRemaining),
+        monthsElapsed: Math.max(0, monthsElapsed),
+        monthsRemaining: Math.max(0, monthsRemaining),
+        color: qDef.color,
+        glow: qDef.glow,
+        gradient: qDef.gradient,
+        yearPct,
+        qi,
+        today: now,
+      };
+    }
+
+    function fmt1(n) { return n.toFixed(1); }
+
+    function render() {
+      const now = new Date();
+      const info = getQuarterInfo(now);
+      const root = document.documentElement;
+
+      // Apply quarter theme
+      root.style.setProperty('--accent', `var(${info.color})`);
+      root.style.setProperty('--accent-glow', `var(${info.glow})`);
+      root.style.setProperty('--accent-gradient', `var(${info.gradient})`);
+
+      // Hero
+      document.getElementById('qLabel').textContent = `Q${info.q}`;
+      document.getElementById('yearLabel').textContent = info.year;
+      document.getElementById('dateRange').textContent = info.label;
+
+      // Progress
+      const pctRounded = info.pct.toFixed(1);
+      document.getElementById('pct').textContent = `${pctRounded}%`;
+      document.getElementById('progressFill').style.width = `${info.pct}%`;
+
+      // Stats
+      document.getElementById('daysElapsed').textContent = info.daysElapsed;
+      document.getElementById('daysRemaining').textContent = info.daysRemaining;
+      document.getElementById('weeksElapsed').textContent = info.weeksElapsed;
+      document.getElementById('weeksRemaining').textContent = info.weeksRemaining;
+      document.getElementById('monthsElapsed').textContent = fmt1(info.monthsElapsed);
+      document.getElementById('monthsRemaining').textContent = fmt1(info.monthsRemaining);
+
+      // Year timeline
+      document.getElementById('yearFill').style.width = `${info.yearPct}%`;
+      document.getElementById('yearPct').textContent = `${info.yearPct.toFixed(1)}% of year`;
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`yq${i}`);
+        if (i === info.q) {
+          el.classList.add('active-q');
+        } else {
+          el.classList.remove('active-q');
+        }
+      }
+
+      // Footer
+      const d = now;
+      const dateStr = `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+      document.getElementById('todayLabel').textContent = dateStr;
+    }
+
+    render();
+    // Refresh at midnight to keep date accurate
+    function scheduleNextDay() {
+      const now = new Date();
+      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const msUntilMidnight = midnight - now;
+      setTimeout(() => { render(); scheduleNextDay(); }, msUntilMidnight);
+    }
+    scheduleNextDay();
+  </script>
+</body>
+</html>
